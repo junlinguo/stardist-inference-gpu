@@ -58,6 +58,5 @@ You can customize the inference by modifying the following parameters in the scr
 If an image is found to be corrupted or unreadable (e.g., very low average pixel value), the script will skip that image and continue processing the remaining images.
 
 ### 6. Performance
-
 The total processing time will be printed to the console after the script has finished running.
-```
+
