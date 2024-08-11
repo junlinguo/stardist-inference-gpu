@@ -58,3 +58,41 @@ If an image is found to be corrupted or unreadable (e.g., very low average pixel
 ### 6. Performance
 The total processing time will be printed to the console after the script has finished running.
 
+## Example
+
+Here is an example of how the script might be used:
+
+```python
+# Base directory containing multiple folders of PNG files
+base_image_dir = '/path/to/base/'
+
+# Subdirectory within the base directory that contains the PNG files
+png_subdir_name = 'folder1'
+
+# Output directory for predictions
+output_predictions_dir = '/path/to/result'
+
+# Full path to the folder containing the PNG files
+png_folder_path = os.path.join(base_image_dir, png_subdir_name)
+
+# Initialize the StardistProcessor for model inference
+model = StardistProcessor()
+
+# Create the output directory if it does not exist
+if not os.path.exists(output_predictions_dir):
+    os.makedirs(output_predictions_dir)
+
+# Retrieve all PNG files from the specified directory
+image_files = glob.glob(os.path.join(png_folder_path, '*.png'))
+
+# Run the inference and save the results
+for img in image_files:
+    image_array = model.load_image(img)
+    labels, res = model.model_eval(image_array)
+    np.save(os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_contours.npy")), labels)
+    Image.fromarray(image_array).save(os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_contours.png")))
+
+# Output the total processing time
+print(time.time() - start_time)
+```
+
