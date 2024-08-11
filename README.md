@@ -12,7 +12,7 @@ The main script is `stardist_gpu.py`. The detailed description of how to use thi
 Before running the script, ensure you have the following Python packages installed:
 - `numpy`
 - `PIL` (Pillow)
-- `csbdeep`
+- `csbdeep` (follow this [link](https://github.com/CSBDeep/CSBDeep/tree/main/extras#conda-environment) for installation, I used the tensorflow 2.4 version)
 - `stardist`
 - `tqdm`
 - `cv2` (OpenCV)
