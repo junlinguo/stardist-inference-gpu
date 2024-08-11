@@ -19,8 +19,8 @@ Before running the script, ensure you have the following Python packages install
 You can install these packages using pip:
 ```bash
 pip install numpy pillow csbdeep stardist tqdm opencv-python matplotlib
-The requirements.txt is the exported environment file for my setup
 ```
+The requirements.txt (or environment.yml) is the exported environment file for my conda environment setup
 
 ## Usage
 
