@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from csbdeep.utils import normalize
 from stardist.models import StarDist2D
-from utils import find_files, copy_random_png_images
 from tqdm import tqdm
 import cv2
 import pickle
@@ -54,71 +53,65 @@ class StardistProcessor:
 
 
 if __name__ == "__main__":
-    # path_to_patch_folder: the root directory of all patch (png) folders
-    start_time = time.time()
-    absolute_input_path = '/home/guoj5/Desktop/wsi-select/Version2_patch_sampled/rodent_kidney_images'
-    relative_input_path = 'dataset3_converted'
-    absolute_output_path = '/home/guoj5/Desktop/wsi-select/Version2_patch_sampled_predictions/stardist_pred/rodent_kidney_images'
-    path_to_patch_folder = os.path.join(absolute_input_path, relative_input_path)
 
-    # list of WSI/patch folder path
-    if not os.path.exists(relative_input_path + '_data_dirs.pkl'):
-        data_dirs = list(find_files(path_to_patch_folder, format='.png'))
-        with open(relative_input_path + '_data_dirs.pkl', 'wb') as binary_file:
-            pickle.dump(data_dirs, binary_file)
-    else:
-        with open(relative_input_path + '_data_dirs.pkl', 'rb') as file:
-            data_dirs = pickle.load(file)
+    start_time = time.time()
+    # Base directory containing multiple folders of PNG files
+    base_image_dir = '/path/to/base/'
+
+    # Subdirectory within the base directory that contains the PNG files
+    png_subdir_name = 'folder1'
+
+    # Output directory for predictions
+    output_predictions_dir = '/path/to/result'
+
+    # Full path to the folder containing the PNG files
+    png_folder_path = os.path.join(base_image_dir, png_subdir_name)
+
 
     model = StardistProcessor()
-    resume_dataset = 0      # resume point
 
-    # inference each folder
-    for i in tqdm(range(resume_dataset, len(data_dirs))):
+    # inference 
+    if not os.path.exists(output_predictions_dir):
+        os.makedirs(output_predictions_dir)
 
-        data_dir = data_dirs[i]
-        output_dir = os.path.join(absolute_output_path, data_dir[data_dir.find(relative_input_path):])
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+    image_files = glob.glob(os.path.join(png_folder_path, '*.png'))
 
-        image_files = glob.glob(os.path.join(data_dir, '*.png'))
+    try:
+        for img in image_files:
+            image_array = model.load_image(img)
 
-        try:
-            for img in image_files:
+            # Image error
+            if np.mean(image_array) < 20:
+                print(f"Image error check {img}\n")
+                continue
 
-                image_array = model.load_image(img)
+            # Inference 
+            labels, res = model.model_eval(image_array)     # instance map, res
 
-                # Image error
-                if np.mean(image_array) < 20:
-                    print(f"Image error check {img}\n")
-                    continue
+            # Save Binary Mask (default: False)
+            if BINARY:
+                binary_map = ((labels > 0).astype(np.uint8)) * 255
+                output_file = os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_binary.png"))
+                if binary_map.ndim != 3:
+                    image = Image.fromarray(np.stack((binary_map, binary_map, binary_map), axis=-1))
+                    image.save(output_file)
 
-                labels, res = model.model_eval(image_array)     # instance map, res
+            # Save Instance Mask as contours.png (contour + image overlay) and .npy File
+            unique_labels = np.unique(labels)
+            unique_labels = unique_labels[unique_labels != 0]
+            for label in unique_labels:
+                binary_mask = np.where(labels == label, 255, 0).astype(np.uint8)
+                contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                # Save Binary mask (default: False)
-                if BINARY:
-                    binary_map = ((labels > 0).astype(np.uint8)) * 255
-                    output_file = os.path.join(output_dir, os.path.basename(img).replace(".png", "_binary.png"))
-                    if binary_map.ndim != 3:
-                        image = Image.fromarray(np.stack((binary_map, binary_map, binary_map), axis=-1))
-                        image.save(output_file)
+                cv2.drawContours(image_array, contours, -1, (0, 255, 0), 3)
 
-                # Save instance map as contours.png (contour + image overlay) and .npy File (nuclei count 2d matrix)
-                unique_labels = np.unique(labels)
-                unique_labels = unique_labels[unique_labels != 0]
-                for label in unique_labels:
-                    binary_mask = np.where(labels == label, 255, 0).astype(np.uint8)
-                    contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            np.save(os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_contours.npy")), labels)
+            Image.fromarray(image_array).save(os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_contours.png")))
 
-                    cv2.drawContours(image_array, contours, -1, (0, 255, 0), 3)
-
-                np.save(os.path.join(output_dir, os.path.basename(img).replace(".png", "_contours.npy")), labels)
-                Image.fromarray(image_array).save(os.path.join(output_dir, os.path.basename(img).replace(".png", "_contours.png")))
-
-        except Exception as e:
-            print('Error in  ' + img)
+    except Exception as e:
+        print('Error in  ' + img)
 
 
-    print(time.time() - start_time)
+print(time.time() - start_time)
 
 
