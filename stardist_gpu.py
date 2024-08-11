@@ -16,8 +16,13 @@ BINARY = False
 
 
 class StardistProcessor:
+    """
+    StardistProcessor is responsible for handling the inference process 
+    using a pre-trained StarDist2D model.
+    """
 
     def __init__(self,  model_type="2D_versatile_he", use_gpu=True):
+        # Initialize the Stardist2D model with the specified type and GPU support.
         self.gpu = use_gpu
         self.model = StarDist2D.from_pretrained(model_type)
 
@@ -27,14 +32,14 @@ class StardistProcessor:
 
     def model_eval(self, image_array, nms_thresh=None, prob_thresh=None):
         """
-        Evaluate/Inference the stardist model on image_array.
+        Perform inference on the provided image array using the Stardist model.
 
         the params are based on Stardist model API,
         Using default values: prob_thresh=0.692478, nms_thresh=0.3
-        :param image_array:
-        :param nms_thresh:
-        :param prob_thresh:
-        :return:
+        :param image_array: The image data to be processed.
+        :param nms_thresh: Non-Maximum Suppression threshold (optional).
+        :param prob_thresh: Probability threshold for object detection (optional).
+        :return: Tuple of labels (instance segmentation map) and results
         """
 
         # normalize channels jointly
@@ -48,6 +53,12 @@ class StardistProcessor:
         return labels, res
 
     def load_image(self, img_path):
+        """
+        Load an image from the specified path and convert it to an RGB numpy array.
+
+        :param img_path: Path to the image file.
+        :return: Numpy array of the RGB image.
+        """
         image = np.array(Image.open(img_path).convert('RGB'))
         return image
 
@@ -67,28 +78,29 @@ if __name__ == "__main__":
     # Full path to the folder containing the PNG files
     png_folder_path = os.path.join(base_image_dir, png_subdir_name)
 
-
+    # Initialize the StardistProcessor for model inference
     model = StardistProcessor()
 
-    # inference 
+    # Create the output directory if it does not exist
     if not os.path.exists(output_predictions_dir):
         os.makedirs(output_predictions_dir)
 
+    # Retrieve all PNG files from the specified directory
     image_files = glob.glob(os.path.join(png_folder_path, '*.png'))
-
     try:
         for img in image_files:
+            # Load the image from file
             image_array = model.load_image(img)
 
-            # Image error
+            # Image error: (e.g., very low average pixel value)
             if np.mean(image_array) < 20:
                 print(f"Image error check {img}\n")
                 continue
 
-            # Inference 
+            # Perform model inference to get instance labels and results
             labels, res = model.model_eval(image_array)     # instance map, res
 
-            # Save Binary Mask (default: False)
+            # Save Binary Mask if BINARY is set to True (default is False)
             if BINARY:
                 binary_map = ((labels > 0).astype(np.uint8)) * 255
                 output_file = os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_binary.png"))
@@ -104,14 +116,15 @@ if __name__ == "__main__":
                 contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
                 cv2.drawContours(image_array, contours, -1, (0, 255, 0), 3)
-
+            
+            # Save the results: contours image and instance labels as a .npy file
             np.save(os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_contours.npy")), labels)
             Image.fromarray(image_array).save(os.path.join(output_predictions_dir, os.path.basename(img).replace(".png", "_contours.png")))
 
     except Exception as e:
         print('Error in  ' + img)
 
-
+# Output the total processing time for this folder 
 print(time.time() - start_time)
 
 
