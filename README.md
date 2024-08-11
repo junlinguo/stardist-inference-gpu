@@ -1,10 +1,12 @@
 # Read Me
-A customized GPU inference pipeline for cell nuclei foundation model - StarDist
-The main script is `stardist_gpu.py`. The detail description on how to use this gpu-based StarDist codebase is following.
+A customized GPU inference pipeline for cell nuclei foundation model - StarDist (H&E)
 
+The main script is `stardist_gpu.py`. The detailed description of how to use this GPU-based StarDist codebase is provided below.
 
-##  Stardist Model Inference Script
-This repository contains a Python script to perform inference using the StarDist2D model on a set of PNG images (organized as folders of image patch png files). The script processes images, generates instance masks, and saves the results with an option to also save binary masks.
+## For Reference:
+- The StarDist paper: [StarDist Paper](https://arxiv.org/abs/2203.02284)
+- The StarDist GitHub codebase: [StarDist GitHub](https://github.com/stardist/stardist)
+- A paper that provides an assessment of cell nuclei AI foundation models (including StarDist) on kidney pathology images: [Assessment Paper(TBD)](https://example.com/assessment-paper)
 
 ## Requirements
 Before running the script, ensure you have the following Python packages installed:
