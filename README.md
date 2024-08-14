@@ -6,7 +6,7 @@ The main script is `stardist_gpu.py`. The detailed description of how to use thi
 ## Reference:
 - The StarDist paper: [StarDist Paper](https://arxiv.org/abs/2203.02284)
 - The StarDist GitHub codebase: [StarDist GitHub](https://github.com/stardist/stardist)
-- A paper that provides an assessment of cell nuclei AI foundation models (including StarDist) on kidney pathology images: [Assessment Paper(TBD)](https://example.com/assessment-paper)
+- This repo is based on the paper: [Assessment of Cell Nuclei AI Foundation Models in Kidney Pathology](https://arxiv.org/abs/2408.06381)
 
 ## Requirements
 Before running the script, ensure you have the following Python packages installed:
